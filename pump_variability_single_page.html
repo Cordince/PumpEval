@@ -1,0 +1,2915 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Pump Flow Variability Tool</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --ink: #182230;
+      --muted: #5d6878;
+      --line: #d8dee8;
+      --line-strong: #b8c2cf;
+      --teal: #0f766e;
+      --teal-soft: #e8f5f3;
+      --blue: #1d4ed8;
+      --blue-soft: #edf4ff;
+      --amber: #9a5d00;
+      --amber-soft: #fff4d8;
+      --red: #b42318;
+      --red-soft: #fff0ee;
+      --green: #14783f;
+      --green-soft: #e9f7ef;
+      --violet: #6d28d9;
+      --violet-soft: #f3efff;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 14px 36px rgba(17, 24, 39, 0.08);
+      --radius: 8px;
+      --focus: 0 0 0 3px rgba(15, 118, 110, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #eef3f8 0, #f5f7fa 340px),
+        var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--blue);
+      overflow-wrap: anywhere;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .wrap,
+    .app-shell {
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .page-hero {
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(120deg, rgba(15, 118, 110, 0.14), rgba(29, 78, 216, 0.1)),
+        #edf3f7;
+    }
+
+    .page-hero .wrap {
+      padding-top: 36px;
+      padding-bottom: 30px;
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .hero-copy {
+      min-width: 0;
+    }
+
+    .help-button {
+      flex: 0 0 auto;
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #ffffff;
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+
+    .help-button:hover {
+      border-color: var(--teal);
+      background: #263241;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 980px;
+      font-size: clamp(2rem, 5vw, 4rem);
+    }
+
+    h2 {
+      font-size: clamp(1.3rem, 2vw, 1.85rem);
+    }
+
+    h3 {
+      font-size: 1rem;
+    }
+
+    .subtitle {
+      max-width: 820px;
+      margin: 12px 0 18px;
+      color: #334155;
+      font-size: 1.1rem;
+    }
+
+    .notice {
+      border: 1px solid;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .notice {
+      background: var(--amber-soft);
+      border-color: #efc56f;
+      color: #623a00;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      background: rgba(15, 23, 42, 0.45);
+      padding: 20px;
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .modal-panel {
+      width: min(720px, 100%);
+      max-height: min(760px, calc(100vh - 40px));
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid var(--line);
+      padding: 18px;
+    }
+
+    .modal-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .modal-close {
+      min-width: 40px;
+      padding: 6px 10px;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 18px;
+    }
+
+    .modal-body ol,
+    .modal-body ul {
+      margin: 10px 0 0;
+      padding-left: 22px;
+    }
+
+    .modal-body li + li {
+      margin-top: 8px;
+    }
+
+    .modal-note {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--amber);
+      border-radius: var(--radius);
+      background: #fffaf0;
+      padding: 12px;
+      color: #5d3a00;
+    }
+
+    .app-shell {
+      padding-top: 26px;
+      padding-bottom: 46px;
+    }
+
+    .panel,
+    .metric-card,
+    .channel-pill,
+    .factor-card,
+    .mini-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .panel {
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .controls-row,
+    .button-row,
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .controls-row {
+      margin-bottom: 14px;
+    }
+
+    .field,
+    .small-field {
+      min-width: 0;
+    }
+
+    .small-field {
+      width: 180px;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    legend,
+    label,
+    .label {
+      display: block;
+      margin-bottom: 6px;
+      color: #2b394b;
+      font-size: 0.92rem;
+      font-weight: 730;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ink);
+      padding: 9px 10px;
+    }
+
+    input[readonly],
+    input[disabled] {
+      color: #667486;
+      background: #eef2f6;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #283545;
+      cursor: pointer;
+      font-weight: 740;
+      padding: 8px 12px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    button:hover {
+      border-color: var(--teal);
+      transform: translateY(-1px);
+    }
+
+    button[aria-pressed="true"],
+    .primary-button {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #ffffff;
+    }
+
+    .muted-button {
+      background: #f8fafc;
+    }
+
+    .help {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .topology {
+      position: relative;
+      overflow: visible;
+      min-height: 0;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 252, 0.94)),
+        repeating-linear-gradient(90deg, transparent 0, transparent 47px, rgba(148, 163, 184, 0.12) 48px),
+        repeating-linear-gradient(0deg, transparent 0, transparent 47px, rgba(148, 163, 184, 0.12) 48px);
+      padding: 18px;
+    }
+
+    .topology-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 18px;
+      min-height: 310px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .topology-node {
+      align-self: center;
+      justify-self: center;
+      min-width: 170px;
+      border: 2px solid #cbd5e1;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.94);
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .topology-node strong {
+      display: block;
+      color: #1f2937;
+    }
+
+    .topology-node span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .node-source {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .node-process {
+      grid-column: 2;
+      grid-row: 2;
+      min-width: 220px;
+      border-color: var(--teal);
+      background: #f8fffe;
+    }
+
+    .node-return {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .node-aux {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .node-collection {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    .topology-lines {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      left: 18px;
+      height: 310px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .channel-layer {
+      position: relative;
+      inset: auto;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      pointer-events: auto;
+    }
+
+    .channel-zone {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px;
+      width: auto;
+      min-height: 96px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.86);
+      padding: 34px 10px 10px;
+      pointer-events: auto;
+    }
+
+    .zone-process-in,
+    .zone-process-out,
+    .zone-recirculation,
+    .zone-transfer,
+    .zone-measurement,
+    .zone-collection {
+      inset: auto;
+      transform: none;
+      justify-content: flex-start;
+    }
+
+    .topology-lane-title {
+      position: absolute;
+      top: 9px;
+      left: 10px;
+      color: #334155;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .channel-pill {
+      flex: 1 1 190px;
+      width: auto;
+      max-width: 280px;
+      min-width: 0;
+      padding: 9px;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.07);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .channel-pill[aria-current="true"] {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+    }
+
+    .pill-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .pill-top .badge {
+      flex: 0 0 auto;
+    }
+
+    .flow-bar {
+      display: block;
+      height: 6px;
+      margin-top: 8px;
+      border-radius: 999px;
+      background: #dbe4ef;
+      overflow: hidden;
+    }
+
+    .flow-bar span {
+      display: block;
+      height: 100%;
+      min-width: 3px;
+      border-radius: inherit;
+      background: var(--teal);
+    }
+
+    .sensor-dot,
+    .valve-dot {
+      position: absolute;
+      z-index: 2;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #94a3b8;
+      background: #ffffff;
+      color: #475569;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .sensor-dot.one {
+      left: 33%;
+      top: 49%;
+    }
+
+    .sensor-dot.two {
+      right: 33%;
+      top: 49%;
+    }
+
+    .valve-dot.one {
+      left: 24%;
+      top: 49%;
+      border-radius: 4px;
+    }
+
+    .valve-dot.two {
+      right: 24%;
+      top: 49%;
+      border-radius: 4px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card {
+      min-width: 0;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+
+    .metric-card.good {
+      border-left: 4px solid var(--green);
+    }
+
+    .metric-card.caution {
+      border-left: 4px solid var(--amber);
+    }
+
+    .metric-card.warning {
+      border-left: 4px solid var(--red);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 760;
+    }
+
+    .metric-value {
+      margin-top: 6px;
+      color: var(--ink);
+      font-size: clamp(1.22rem, 2.6vw, 1.9rem);
+      font-weight: 820;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-meta {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .badge,
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      font-weight: 780;
+      white-space: nowrap;
+    }
+
+    .badge.vendor,
+    .status-label.vendor,
+    .status-label.documented {
+      background: var(--teal-soft);
+      color: #09534e;
+    }
+
+    .badge.measured,
+    .status-label.measured {
+      background: var(--green-soft);
+      color: #0f5a30;
+    }
+
+    .badge.inferred,
+    .status-label.inferred {
+      background: var(--blue-soft);
+      color: #153f90;
+    }
+
+    .badge.placeholder,
+    .status-label.placeholder {
+      background: var(--amber-soft);
+      color: #673c00;
+    }
+
+    .badge.unavailable,
+    .badge.limit,
+    .status-label.needs {
+      background: var(--red-soft);
+      color: #872016;
+    }
+
+    .badge.assumed,
+    .status-label.assumed {
+      background: var(--violet-soft);
+      color: #4c1d95;
+    }
+
+    .warning-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .warning-item {
+      border: 1px solid #f1c77e;
+      border-left: 4px solid var(--amber);
+      border-radius: var(--radius);
+      background: #fffaf0;
+      color: #5d3a00;
+      padding: 10px 12px;
+    }
+
+    .warning-item.error {
+      border-color: #efb0a7;
+      border-left-color: var(--red);
+      background: var(--red-soft);
+      color: #7a1d15;
+    }
+
+    .matrix-wrap,
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 9px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: var(--gray-soft);
+      color: #334155;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .channel-row {
+      cursor: pointer;
+    }
+
+    .channel-row.selected {
+      background: #f1fbf9;
+    }
+
+    .channel-row input,
+    .channel-row select {
+      min-width: 92px;
+    }
+
+    .channel-row input[type="checkbox"] {
+      width: 20px;
+      min-width: 20px;
+      min-height: 20px;
+      accent-color: var(--teal);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.88fr) minmax(0, 1.12fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .full-field {
+      grid-column: 1 / -1;
+    }
+
+    .pump-buttons,
+    .segmented {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pump-buttons button[data-loaded="false"] {
+      border-style: dashed;
+      color: #6b4a06;
+      background: #fffaf0;
+    }
+
+    .pump-buttons button[data-loaded="false"][aria-pressed="true"] {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #ffffff;
+    }
+
+    .detail-results {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .factor-card {
+      padding: 12px;
+      background: #fbfcfe;
+    }
+
+    .factor-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .factor-top input[type="checkbox"] {
+      width: 20px;
+      min-height: 20px;
+      margin-top: 3px;
+      accent-color: var(--teal);
+    }
+
+    .factor-title {
+      margin: 0;
+      font-weight: 780;
+    }
+
+    .factor-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .scenario-summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mini-card {
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .mini-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 740;
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.1rem;
+      overflow-wrap: anywhere;
+    }
+
+    .band-tools {
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .band-tools .field {
+      width: min(320px, 100%);
+    }
+
+    .band-wrap {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfe;
+      padding: 14px;
+    }
+
+    .impact-kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .impact-kpi {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 12px;
+    }
+
+    .impact-kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 760;
+    }
+
+    .impact-kpi strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.08rem;
+      overflow-wrap: anywhere;
+    }
+
+    .impact-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .impact-chart {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 16px;
+    }
+
+    .impact-scale {
+      position: absolute;
+      inset: 0;
+    }
+
+    .impact-scale-wrap {
+      position: relative;
+      height: 104px;
+      margin-top: 8px;
+    }
+
+    .impact-axis {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 44px;
+      height: 4px;
+      border-radius: 999px;
+      background: #d4dde8;
+    }
+
+    .impact-range {
+      position: absolute;
+      top: 34px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(154, 93, 0, 0.2);
+      border: 1px solid rgba(154, 93, 0, 0.38);
+    }
+
+    .impact-tick {
+      position: absolute;
+      top: 22px;
+      width: 2px;
+      height: 48px;
+      transform: translateX(-1px);
+      background: var(--teal);
+    }
+
+    .impact-tick.center {
+      background: var(--amber);
+    }
+
+    .impact-tick span {
+      position: absolute;
+      top: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 112px;
+      font-size: 0.82rem;
+      font-weight: 760;
+      text-align: center;
+      color: #0b625b;
+    }
+
+    .impact-tick.center span {
+      top: 70px;
+      color: #7a4a00;
+    }
+
+    .impact-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 6px;
+    }
+
+    .impact-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .factor-impact {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 14px;
+    }
+
+    .factor-impact-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .factor-impact-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 12px;
+      align-items: center;
+      color: #2b394b;
+      font-size: 0.92rem;
+    }
+
+    .factor-impact-meta {
+      color: var(--muted);
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .factor-impact-bar {
+      grid-column: 1 / -1;
+      height: 7px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .factor-impact-bar span {
+      display: block;
+      height: 100%;
+      min-width: 3px;
+      border-radius: inherit;
+      background: var(--amber);
+    }
+
+    .factor-empty {
+      margin: 10px 0 0;
+      color: var(--muted);
+    }
+
+    .measurement-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 0;
+    }
+
+    details + details {
+      margin-top: 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 800;
+    }
+
+    .details-body {
+      padding: 0 14px 14px;
+    }
+
+    pre {
+      overflow-x: auto;
+      margin: 0;
+      border-radius: var(--radius);
+      background: #0f172a;
+      color: #e5edf8;
+      padding: 14px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .source-list {
+      margin: 14px 0 0;
+      padding-left: 20px;
+    }
+
+    .source-list li + li {
+      margin-top: 6px;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1120px) {
+      .result-grid,
+      .scenario-summary,
+      .impact-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .scenario-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .channel-layer {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .impact-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .detail-grid,
+      .measurement-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topology {
+        min-height: 0;
+      }
+
+      .topology-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(5, auto);
+      }
+
+      .node-aux,
+      .node-source,
+      .node-process,
+      .node-return,
+      .node-collection {
+        grid-column: 1;
+      }
+
+      .node-aux {
+        grid-row: 1;
+      }
+
+      .node-source {
+        grid-row: 2;
+      }
+
+      .node-process {
+        grid-row: 3;
+      }
+
+      .node-return {
+        grid-row: 4;
+      }
+
+      .node-collection {
+        grid-row: 5;
+      }
+
+      .channel-layer {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .channel-zone {
+        position: relative;
+        width: 100%;
+        transform: none;
+        justify-content: flex-start;
+      }
+
+      .topology-lines,
+      .sensor-dot,
+      .valve-dot {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap,
+      .app-shell {
+        width: 100%;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .page-hero .wrap {
+        padding-top: 28px;
+        padding-bottom: 24px;
+      }
+
+      .hero-top {
+        display: block;
+      }
+
+      .help-button {
+        margin-top: 14px;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .button-row {
+        margin-top: 10px;
+      }
+
+      .field-grid,
+      .detail-results,
+      .scenario-grid,
+      .scenario-summary,
+      .factor-fields,
+      .result-grid,
+      .impact-kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .small-field {
+        width: 100%;
+      }
+
+      .band-tools {
+        display: block;
+      }
+
+      .matrix-wrap {
+        border: 0;
+        background: transparent;
+      }
+
+      #channelMatrix thead {
+        display: none;
+      }
+
+      #channelMatrix,
+      #channelMatrix tbody,
+      #channelMatrix tr,
+      #channelMatrix td {
+        display: block;
+        width: 100%;
+      }
+
+      #channelMatrix tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #ffffff;
+        padding: 8px;
+      }
+
+      #channelMatrix td {
+        display: grid;
+        grid-template-columns: 132px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+      }
+
+      #channelMatrix td:last-child {
+        border-bottom: 0;
+      }
+
+      #channelMatrix td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 760;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-hero">
+    <div class="wrap">
+      <div class="hero-top">
+        <div class="hero-copy">
+          <h1>Multi-Pump Flow Variability Tool</h1>
+          <p class="subtitle">Generic pump-channel flow, topology assumptions, and installed-system uncertainty</p>
+        </div>
+        <button type="button" class="help-button" id="openHelpButton" aria-haspopup="dialog">How to use this</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="modal-backdrop" id="helpModal" hidden>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" aria-describedby="helpModalDescription">
+      <div class="modal-head">
+        <div>
+          <h2 id="helpModalTitle">How to use this</h2>
+          <p id="helpModalDescription">Use the page to make pump-channel assumptions, nominal flow, and missing measurements visible.</p>
+        </div>
+        <button type="button" class="modal-close" id="closeHelpButton" aria-label="Close help modal">×</button>
+      </div>
+      <div class="modal-body">
+        <ol>
+          <li>Start in <strong>System Model</strong>. Set the number of channels, assign each enabled pump a generic role, and use the abstract topology to check whether the model matches the conversation.</li>
+          <li>Edit the <strong>Pump channel matrix</strong>. For each channel, choose pumphead, tube bore, wall, rpm, installation condition, and any one-run measured flow you have.</li>
+          <li>Click a channel row or topology card to inspect it in <strong>Selected Pump Detail</strong>. Use this for single-channel nominal flow, mL/rev, granularity, and range warnings.</li>
+          <li>Review <strong>System Results</strong> for gross pumped flow, process inflow/outflow, nominal balance error, recirculation flow, measurement coverage, unavailable rows, and over-limit rows.</li>
+          <li>Use <strong>Scenario Variability</strong> only as a discussion layer. Toggle placeholder factors to see how assumptions could move the system band, then identify which assumptions need measurement.</li>
+          <li>Use <strong>Measurement Quick Entry</strong> to add measured flow for a channel and see the one-run ratio, bias, and correction factor.</li>
+          <li>Use <strong>Source / Data Panel</strong> to inspect the embedded vendor tables and the generic role definitions behind the system model.</li>
+        </ol>
+        <div class="modal-note">
+          This page is a conversation aid. Treat vendor nominal data, placeholder scenario factors, and one-run local measurements as separate evidence levels.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <main class="app-shell">
+    <section class="panel" aria-labelledby="system-model-title">
+      <div class="section-head">
+        <div>
+          <h2 id="system-model-title">System Model</h2>
+          <p>Define a generic set of pump channels and view the abstract flow topology.</p>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="small-field">
+          <label for="channelCountInput">Number of pump channels</label>
+          <input id="channelCountInput" type="number" min="1" max="12" step="1" value="8">
+        </div>
+        <div class="button-row" aria-label="System model actions">
+          <button type="button" id="loadDemoButton">Load generic 8-channel demo</button>
+          <button type="button" id="singlePumpButton">Single-pump view</button>
+          <button type="button" id="copySelectedButton">Copy selected pump settings to all enabled</button>
+          <button type="button" id="clearMeasuredButton">Clear measured values</button>
+        </div>
+      </div>
+
+      <div class="topology" aria-label="Generic abstract topology visualization">
+        <svg class="topology-lines" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"></path>
+            </marker>
+          </defs>
+          <path d="M145 210 C275 210, 320 210, 420 210" stroke="#94a3b8" stroke-width="5" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M580 210 C690 210, 735 210, 855 210" stroke="#94a3b8" stroke-width="5" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M500 92 C500 140, 500 154, 500 176" stroke="#94a3b8" stroke-width="4" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M500 248 C500 278, 500 302, 500 336" stroke="#94a3b8" stroke-width="4" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M420 164 C340 90, 660 90, 580 164" stroke="#64748b" stroke-width="4" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M365 258 C330 326, 670 326, 635 258" stroke="#cbd5e1" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+        </svg>
+        <div class="sensor-dot one" title="Sensor Point">S</div>
+        <div class="sensor-dot two" title="Sensor Point">S</div>
+        <div class="valve-dot one" title="Isolation Valve">V</div>
+        <div class="valve-dot two" title="Isolation Valve">V</div>
+
+        <div class="topology-grid">
+          <div class="topology-node node-aux"><strong>Auxiliary Source</strong><span>Auxiliary Inlet</span></div>
+          <div class="topology-node node-source"><strong>Source Manifold</strong><span>Main Inlet</span></div>
+          <div class="topology-node node-process"><strong>Process Module</strong><span>Sensor Point and Air Removal / Trap context</span></div>
+          <div class="topology-node node-return"><strong>Return Manifold</strong><span>Main Outlet and Return Path</span></div>
+          <div class="topology-node node-collection"><strong>Collection Sink</strong><span>Collection Outlet and Prime / Drain</span></div>
+        </div>
+
+        <div class="channel-layer" id="topologyChannels"></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="system-results-title">
+      <div class="section-head">
+        <div>
+          <h2 id="system-results-title">System Results</h2>
+          <p>System balance thresholds are discussion defaults, not specifications.</p>
+        </div>
+      </div>
+      <div class="result-grid" id="systemResultCards"></div>
+      <div class="warning-list" id="systemWarnings" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="matrix-title">
+      <div class="section-head">
+        <div>
+          <h2 id="matrix-title">Pump channel matrix</h2>
+          <p>Edit enabled channels, roles, nominal settings, and one-run local measurements. Click a row to select it for detail.</p>
+        </div>
+      </div>
+      <div class="matrix-wrap">
+        <table id="channelMatrix">
+          <thead>
+            <tr>
+              <th>Enabled</th>
+              <th>Pump ID</th>
+              <th>Role</th>
+              <th>Pumphead</th>
+              <th>Bore</th>
+              <th>Wall</th>
+              <th>OD</th>
+              <th>RPM</th>
+              <th>Nominal flow</th>
+              <th>Granularity</th>
+              <th>Installation</th>
+              <th>Measured flow</th>
+              <th>Ratio / bias</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="channelMatrixBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="detail-title">
+      <div class="section-head">
+        <div>
+          <h2 id="detail-title">Selected Pump Detail</h2>
+          <p>Detailed single-pump calculation synced with the selected channel row.</p>
+        </div>
+        <div class="small-field">
+          <label for="selectedChannelSelect">Selected channel</label>
+          <select id="selectedChannelSelect"></select>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <div class="field-grid">
+            <fieldset class="full-field">
+              <legend>Pumphead</legend>
+              <div class="pump-buttons" id="detailPumpheadButtons"></div>
+              <p class="help" id="detailPumpheadHelp">313D uses the embedded pumphead datasheet table by default.</p>
+            </fieldset>
+
+            <div class="full-field">
+              <label for="detailDriveSelect">Drive/control</label>
+              <select id="detailDriveSelect"></select>
+            </div>
+
+            <fieldset class="full-field">
+              <legend>Target flow mode</legend>
+              <div class="segmented" id="detailModeToggle">
+                <button type="button" data-mode="rpm" aria-pressed="true">Enter rpm</button>
+                <button type="button" data-mode="flow" aria-pressed="false">Enter target flow</button>
+              </div>
+            </fieldset>
+
+            <div>
+              <label for="detailBoreSelect">Tube bore / ID (mm)</label>
+              <select id="detailBoreSelect"></select>
+            </div>
+
+            <div>
+              <label for="detailWallInput">Tube wall (mm)</label>
+              <input id="detailWallInput" type="number" min="0" step="0.1" value="1.6">
+            </div>
+
+            <div>
+              <label for="detailOdOutput">Tube OD (mm)</label>
+              <input id="detailOdOutput" type="text" readonly>
+            </div>
+
+            <div>
+              <label for="detailRpmInput">Command speed (rpm)</label>
+              <input id="detailRpmInput" type="number" min="0" step="0.1">
+            </div>
+
+            <div>
+              <label for="detailTargetFlowInput">Target flow (mL/min)</label>
+              <input id="detailTargetFlowInput" type="number" min="0" step="0.001">
+            </div>
+
+            <div>
+              <label for="detailMeasuredInput">Local measured flow (mL/min)</label>
+              <input id="detailMeasuredInput" type="number" min="0" step="0.001" placeholder="Optional one-run check">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="detail-results" id="detailResultCards"></div>
+          <div class="badge-row" id="detailBadges" style="margin-top: 12px;"></div>
+          <div class="warning-list" id="detailWarnings" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="scenario-title">
+      <div class="section-head">
+        <div>
+          <h2 id="scenario-title">Scenario Variability</h2>
+          <p>Global placeholder factors apply to all enabled pump channels for the discussion scenario.</p>
+        </div>
+      </div>
+
+      <div class="scenario-grid" id="scenarioCards"></div>
+      <div class="scenario-summary" id="scenarioSummary"></div>
+
+      <div class="band-tools">
+        <div class="field">
+          <label for="scenarioTargetSelect">Scenario visual target</label>
+          <select id="scenarioTargetSelect">
+            <option value="gross">System gross flow</option>
+            <option value="inflow">Process inflow</option>
+            <option value="outflow">Process outflow</option>
+            <option value="net">Net process balance</option>
+            <option value="selected">Selected pump flow</option>
+          </select>
+        </div>
+        <p class="help">Process balance uses a simple directional scenario band, not a validated uncertainty propagation.</p>
+      </div>
+
+      <div class="band-wrap" aria-label="Scenario impact visualization">
+        <div class="impact-kpis">
+          <div class="impact-kpi"><span>Visual target</span><strong id="scenarioVisualTarget">-</strong></div>
+          <div class="impact-kpi"><span>Nominal</span><strong id="scenarioVisualNominal">-</strong></div>
+          <div class="impact-kpi"><span>Scenario center</span><strong id="scenarioVisualCenter">-</strong></div>
+          <div class="impact-kpi"><span>Scenario range</span><strong id="scenarioVisualRange">-</strong></div>
+          <div class="impact-kpi"><span>Center delta</span><strong id="scenarioVisualDelta">-</strong></div>
+        </div>
+        <div class="impact-layout">
+          <div class="impact-chart">
+            <h3>Scenario impact range</h3>
+            <div class="impact-scale-wrap">
+              <div class="impact-axis"></div>
+              <div class="impact-range" id="scenarioRangeBar"></div>
+              <div class="impact-tick nominal" id="scenarioNominalTick"><span>Nominal</span></div>
+              <div class="impact-tick center" id="scenarioCenterTick"><span>Scenario center</span></div>
+            </div>
+            <div class="impact-scale-labels">
+              <span id="scenarioLowLabel">-</span>
+              <span id="scenarioHighLabel">-</span>
+            </div>
+            <p class="impact-note" id="scenarioNoSpread">No active scenario factors yet. Toggle factors above to create a discussion band.</p>
+          </div>
+          <div class="factor-impact">
+            <h3>Active factor contribution</h3>
+            <div class="factor-impact-list" id="scenarioFactorImpact"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="decomp-title">
+      <div class="section-head">
+        <div>
+          <h2 id="decomp-title">Variability Decomposition</h2>
+          <p>Separate documented data, assumed configuration, placeholder scenario factors, and local measurement gaps.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Current assumption</th>
+              <th>Source/status</th>
+              <th>What would make it better</th>
+            </tr>
+          </thead>
+          <tbody id="decompBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="measurement-title">
+      <div class="section-head">
+        <div>
+          <h2 id="measurement-title">Measurement Quick Entry</h2>
+          <p>Enter a measured flow for one pump channel and review measurement coverage. One run is not validation.</p>
+        </div>
+      </div>
+
+      <div class="measurement-grid">
+        <div>
+          <label for="measurementChannelSelect">Pump channel</label>
+          <select id="measurementChannelSelect"></select>
+          <label for="measurementFlowInput" style="margin-top: 12px;">Measured flow (mL/min)</label>
+          <input id="measurementFlowInput" type="number" min="0" step="0.001" placeholder="Optional one-run check">
+          <div class="detail-results" style="margin-top: 12px;">
+            <article class="metric-card">
+              <div class="metric-label">Measured / nominal ratio</div>
+              <div class="metric-value" id="measurementRatio">-</div>
+              <div class="metric-meta">Current selected entry</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">Measured bias</div>
+              <div class="metric-value" id="measurementBias">-</div>
+              <div class="metric-meta">Versus nominal table flow</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">Suggested correction factor</div>
+              <div class="metric-value" id="measurementCorrection">-</div>
+              <div class="metric-meta">If representative</div>
+            </article>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pump ID</th>
+                <th>Role</th>
+                <th>Nominal flow</th>
+                <th>Measured flow</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="measurementCoverageBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="sources-title">
+      <div class="section-head">
+        <div>
+          <h2 id="sources-title">Source / Data Panel</h2>
+          <p>Embedded vendor source notes, loaded tables, and generic system schema.</p>
+        </div>
+      </div>
+
+      <ul class="source-list">
+        <li>WMFTS 313D pumphead datasheet, 300 series flip-top pumpheads.</li>
+        <li>WMFTS 300 series panel mount pumps / 300 DriveSure ADC/En/Pn performance table.</li>
+        <li><a href="https://www.wmfts.com/en-us/product/watson-marlow-pumps/panel-mount-pumps/300-series-panel-mount-pumps/">https://www.wmfts.com/en-us/product/watson-marlow-pumps/panel-mount-pumps/300-series-panel-mount-pumps/</a></li>
+        <li><a href="https://www.wmfts.com/siteassets/catalog/products/corporate/watson-marlow-pumps/pumpheads/12747/literature/literature-datasheet45/">https://www.wmfts.com/siteassets/catalog/products/corporate/watson-marlow-pumps/pumpheads/12747/literature/literature-datasheet45/</a></li>
+      </ul>
+
+      <details style="margin-top: 14px;" open>
+        <summary>313D pumphead datasheet data loaded in this prototype</summary>
+        <div class="details-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tube bore mm</th>
+                  <th>Wall mm</th>
+                  <th>Approx OD mm</th>
+                  <th>mL/rev</th>
+                  <th>Max continuous mL/min</th>
+                  <th>Max intermittent mL/min</th>
+                </tr>
+              </thead>
+              <tbody id="datasheetTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>300 DriveSure comparison table loaded in this prototype</summary>
+        <div class="details-body">
+          <p class="help">For non-313D pumpheads, approximate mL/rev is inferred from max flow at 410 rpm. This is inferred from DriveSure table, not the 313D pumphead datasheet table.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pumphead</th>
+                  <th>Bore mm</th>
+                  <th>Min mL/min at 0.1 rpm</th>
+                  <th>Max mL/min at 410 rpm</th>
+                  <th>Inferred mL/rev</th>
+                </tr>
+              </thead>
+              <tbody id="driveTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>313D spec summary and DriveSure basis</summary>
+        <div class="details-body">
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><th>Pumphead</th><td>313D</td></tr>
+                <tr><th>Number of channels</th><td>1</td></tr>
+                <tr><th>Number of rollers</th><td>3</td></tr>
+                <tr><th>Compatible tubing bore sizes</th><td>0.5, 0.8, 1.6, 3.2, 4.8, 6.4, 8.0 mm</td></tr>
+                <tr><th>Compatible tubing wall thicknesses</th><td>1.6, 2.4 mm</td></tr>
+                <tr><th>Max continuous operating speed</th><td>400 rpm</td></tr>
+                <tr><th>Max intermittent speed from 1.6 mm wall table</th><td>600 rpm</td></tr>
+                <tr><th>Max continuous flow</th><td>2000 mL/min</td></tr>
+                <tr><th>Max intermittent flow</th><td>3000 mL/min</td></tr>
+                <tr><th>DriveSure speed resolution</th><td>0.1 rpm</td></tr>
+                <tr><th>DriveSure performance table basis</th><td>0.1 rpm minimum to 410 rpm maximum</td></tr>
+                <tr><th>DriveSure basis conditions</th><td>48 V DC power supply, pumping water, 0 bar inlet pressure, 0 bar discharge pressure</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Generic system model data structure</summary>
+        <div class="details-body">
+          <pre id="schemaBlock"></pre>
+        </div>
+      </details>
+
+      <footer>
+        <span id="lastUpdated">Revision 1 · Last updated July 2, 2026</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const BORES = ["0.5", "0.8", "1.6", "3.2", "4.8", "6.4", "8.0"];
+
+    const ROLE_DEFS = {
+      mainInlet: { label: "Main Inlet", sign: 1, group: "process-in" },
+      auxiliaryInlet: { label: "Auxiliary Inlet", sign: 1, group: "process-in" },
+      mainOutlet: { label: "Main Outlet", sign: -1, group: "process-out" },
+      collectionOutlet: { label: "Collection Outlet", sign: -1, group: "process-out" },
+      recirculation: { label: "Recirculation", sign: 0, group: "recirculation" },
+      bypassTransfer: { label: "Bypass / Transfer", sign: 0, group: "transfer" },
+      measurementLine: { label: "Sample / Measurement Line", sign: -1, group: "measurement" },
+      primeDrain: { label: "Prime / Drain", sign: -1, group: "collection" }
+    };
+
+    const PUMPHEADS = [
+      { id: "313D", label: "313D", loaded: true, basis: "313D datasheet" },
+      { id: "314D", label: "314D", loaded: true, basis: "DriveSure table" },
+      { id: "313D2", label: "313D2", loaded: true, basis: "DriveSure table" },
+      { id: "314D2", label: "314D2", loaded: true, basis: "DriveSure table" },
+      { id: "316D", label: "316D", loaded: false, basis: "Listed as compatible pumphead option; detailed flow table not loaded in this prototype" },
+      { id: "318D", label: "318D", loaded: false, basis: "Listed as compatible pumphead option; detailed flow table not loaded in this prototype" }
+    ];
+
+    const DRIVE_CONTROLS = [
+      { value: "ADC", label: "300 DriveSure ADC: analog/current/voltage/frequency/fixed-speed style control" },
+      { value: "En", label: "300 DriveSure En: EtherNet/IP style control" },
+      { value: "Pn", label: "300 DriveSure Pn: PROFINET style control" },
+      { value: "unknown", label: "Unknown/manual: verify exact drive/control stack" }
+    ];
+
+    const DATASHEET_313D = {
+      "0.5": { bore: 0.5, wall: 1.6, od: 3.7, mlRev: 0.03, maxContinuous: 12, maxIntermittent: 18 },
+      "0.8": { bore: 0.8, wall: 1.6, od: 4.0, mlRev: 0.06, maxContinuous: 24, maxIntermittent: 36 },
+      "1.6": { bore: 1.6, wall: 1.6, od: 4.8, mlRev: 0.26, maxContinuous: 104, maxIntermittent: 156 },
+      "3.2": { bore: 3.2, wall: 1.6, od: 6.4, mlRev: 1.0, maxContinuous: 400, maxIntermittent: 600 },
+      "4.8": { bore: 4.8, wall: 1.6, od: 8.0, mlRev: 2.2, maxContinuous: 880, maxIntermittent: 1320 },
+      "6.4": { bore: 6.4, wall: 1.6, od: 9.6, mlRev: 3.6, maxContinuous: 1400, maxIntermittent: 2160 },
+      "8.0": { bore: 8.0, wall: 1.6, od: 11.2, mlRev: 5.0, maxContinuous: 2000, maxIntermittent: 3000 }
+    };
+
+    const DRIVESURE_TABLE = {
+      "313D": {
+        "0.5": { min: 0.003, max: 12.2 },
+        "0.8": { min: 0.007, max: 29.1 },
+        "1.6": { min: 0.027, max: 112.5 },
+        "3.2": { min: 0.100, max: 410 },
+        "4.8": { min: 0.221, max: 904 },
+        "6.4": { min: 0.368, max: 1507 },
+        "8.0": { min: 0.500, max: 2050 }
+      },
+      "314D": {
+        "0.5": { min: 0.003, max: 12.1 },
+        "0.8": { min: 0.006, max: 24.1 },
+        "1.6": { min: 0.025, max: 102.5 },
+        "3.2": { min: 0.086, max: 352 },
+        "4.8": { min: 0.191, max: 784 },
+        "6.4": { min: 0.300, max: 1230 },
+        "8.0": { min: 0.400, max: 1640 }
+      },
+      "313D2": {
+        "0.5": { min: 0.003, max: 12.1 },
+        "0.8": { min: 0.007, max: 29.1 },
+        "1.6": { min: 0.027, max: 112.5 },
+        "3.2": { min: 0.100, max: 410 },
+        "4.8": { min: 0.221, max: 904 },
+        "6.4": { min: 0.368, max: 1507 }
+      },
+      "314D2": {
+        "0.5": { min: 0.003, max: 12.1 },
+        "0.8": { min: 0.006, max: 24.1 },
+        "1.6": { min: 0.025, max: 102.5 },
+        "3.2": { min: 0.086, max: 352 },
+        "4.8": { min: 0.191, max: 784 },
+        "6.4": { min: 0.300, max: 1230 }
+      }
+    };
+
+    const DEFAULT_CHANNELS = [
+      { id: "P-01", enabled: true, role: "mainInlet", pumphead: "313D", bore: "3.2", wall: 1.6, rpm: 60, install: "nominal", measured: "" },
+      { id: "P-02", enabled: true, role: "mainOutlet", pumphead: "313D", bore: "3.2", wall: 1.6, rpm: 60, install: "nominal", measured: "" },
+      { id: "P-03", enabled: true, role: "recirculation", pumphead: "313D", bore: "3.2", wall: 1.6, rpm: 40, install: "nominal", measured: "" },
+      { id: "P-04", enabled: true, role: "auxiliaryInlet", pumphead: "313D", bore: "1.6", wall: 1.6, rpm: 30, install: "nominal", measured: "" },
+      { id: "P-05", enabled: true, role: "collectionOutlet", pumphead: "313D", bore: "1.6", wall: 1.6, rpm: 30, install: "nominal", measured: "" },
+      { id: "P-06", enabled: true, role: "bypassTransfer", pumphead: "313D", bore: "0.8", wall: 1.6, rpm: 60, install: "nominal", measured: "" },
+      { id: "P-07", enabled: false, role: "auxiliaryInlet", pumphead: "313D", bore: "0.8", wall: 1.6, rpm: 20, install: "nominal", measured: "" },
+      { id: "P-08", enabled: false, role: "collectionOutlet", pumphead: "313D", bore: "0.8", wall: 1.6, rpm: 20, install: "nominal", measured: "" }
+    ];
+
+    const INSTALL_OPTIONS = [
+      { value: "nominal", label: "nominal loading" },
+      { value: "questionable", label: "questionable loading/clamp" },
+      { value: "reload-offset", label: "plausible reload offset" },
+      { value: "unknown", label: "unknown installation condition" }
+    ];
+
+    const SCENARIO_FACTORS = [
+      { id: "seating", name: "Tube seating offset / plausible misalignment", bias: -7, uncertainty: 10, active: false },
+      { id: "clamp", name: "Clamp/tension questionable", bias: -5, uncertainty: 8, active: false },
+      { id: "pressure", name: "Non-zero pressure/head versus vendor zero-head basis", bias: -3, uncertainty: 8, active: false },
+      { id: "fluid", name: "Non-water/process fluid assumption", bias: 0, uncertainty: 12, active: false },
+      { id: "fatigue", name: "Used or fatigued tube", bias: -2, uncertainty: 6, active: false },
+      { id: "voltage", name: "Supply voltage not confirmed at 48 V DC", bias: -4, uncertainty: 6, active: false },
+      { id: "reload", name: "Operator reload-to-reload variation", bias: 0, uncertainty: 7, active: false },
+      { id: "manifold", name: "Shared manifold interaction / backpressure coupling", bias: -3, uncertainty: 9, active: false },
+      { id: "asymmetry", name: "Channel-to-channel installation asymmetry", bias: 0, uncertainty: 10, active: false }
+    ];
+
+    const state = {
+      drive: "ADC",
+      mode: "rpm",
+      selectedId: "P-01",
+      measurementId: "P-01",
+      scenarioTarget: "gross",
+      channels: DEFAULT_CHANNELS.map((channel) => ({ ...channel })),
+      factors: SCENARIO_FACTORS.map((factor) => ({ ...factor }))
+    };
+
+    const els = {
+      openHelpButton: document.getElementById("openHelpButton"),
+      closeHelpButton: document.getElementById("closeHelpButton"),
+      helpModal: document.getElementById("helpModal"),
+      channelCountInput: document.getElementById("channelCountInput"),
+      loadDemoButton: document.getElementById("loadDemoButton"),
+      singlePumpButton: document.getElementById("singlePumpButton"),
+      copySelectedButton: document.getElementById("copySelectedButton"),
+      clearMeasuredButton: document.getElementById("clearMeasuredButton"),
+      topologyChannels: document.getElementById("topologyChannels"),
+      systemResultCards: document.getElementById("systemResultCards"),
+      systemWarnings: document.getElementById("systemWarnings"),
+      channelMatrixBody: document.getElementById("channelMatrixBody"),
+      selectedChannelSelect: document.getElementById("selectedChannelSelect"),
+      detailPumpheadButtons: document.getElementById("detailPumpheadButtons"),
+      detailPumpheadHelp: document.getElementById("detailPumpheadHelp"),
+      detailDriveSelect: document.getElementById("detailDriveSelect"),
+      detailModeToggle: document.getElementById("detailModeToggle"),
+      detailBoreSelect: document.getElementById("detailBoreSelect"),
+      detailWallInput: document.getElementById("detailWallInput"),
+      detailOdOutput: document.getElementById("detailOdOutput"),
+      detailRpmInput: document.getElementById("detailRpmInput"),
+      detailTargetFlowInput: document.getElementById("detailTargetFlowInput"),
+      detailMeasuredInput: document.getElementById("detailMeasuredInput"),
+      detailResultCards: document.getElementById("detailResultCards"),
+      detailBadges: document.getElementById("detailBadges"),
+      detailWarnings: document.getElementById("detailWarnings"),
+      scenarioCards: document.getElementById("scenarioCards"),
+      scenarioSummary: document.getElementById("scenarioSummary"),
+      scenarioTargetSelect: document.getElementById("scenarioTargetSelect"),
+      scenarioVisualTarget: document.getElementById("scenarioVisualTarget"),
+      scenarioVisualNominal: document.getElementById("scenarioVisualNominal"),
+      scenarioVisualCenter: document.getElementById("scenarioVisualCenter"),
+      scenarioVisualRange: document.getElementById("scenarioVisualRange"),
+      scenarioVisualDelta: document.getElementById("scenarioVisualDelta"),
+      scenarioRangeBar: document.getElementById("scenarioRangeBar"),
+      scenarioNominalTick: document.getElementById("scenarioNominalTick"),
+      scenarioCenterTick: document.getElementById("scenarioCenterTick"),
+      scenarioLowLabel: document.getElementById("scenarioLowLabel"),
+      scenarioHighLabel: document.getElementById("scenarioHighLabel"),
+      scenarioNoSpread: document.getElementById("scenarioNoSpread"),
+      scenarioFactorImpact: document.getElementById("scenarioFactorImpact"),
+      decompBody: document.getElementById("decompBody"),
+      measurementChannelSelect: document.getElementById("measurementChannelSelect"),
+      measurementFlowInput: document.getElementById("measurementFlowInput"),
+      measurementRatio: document.getElementById("measurementRatio"),
+      measurementBias: document.getElementById("measurementBias"),
+      measurementCorrection: document.getElementById("measurementCorrection"),
+      measurementCoverageBody: document.getElementById("measurementCoverageBody"),
+      datasheetTableBody: document.getElementById("datasheetTableBody"),
+      driveTableBody: document.getElementById("driveTableBody"),
+      schemaBlock: document.getElementById("schemaBlock"),
+      lastUpdated: document.getElementById("lastUpdated")
+    };
+
+    let isRendering = false;
+    let lastModalFocus = null;
+
+    function toNumber(value, fallback = 0) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function fmtFlow(value) {
+      if (!Number.isFinite(value)) return "-";
+      const abs = Math.abs(value);
+      if (abs > 0 && abs < 1) return value.toFixed(3);
+      if (abs >= 1000) return value.toFixed(0);
+      return value.toFixed(1);
+    }
+
+    function fmtRpm(value) {
+      return Number.isFinite(value) ? value.toFixed(1) : "-";
+    }
+
+    function fmtPercent(value) {
+      return Number.isFinite(value) ? `${value.toFixed(1)}%` : "-";
+    }
+
+    function fmtMlRev(value) {
+      if (!Number.isFinite(value)) return "-";
+      if (Math.abs(value) < 0.1) return value.toFixed(3);
+      if (Math.abs(value) < 1) return value.toFixed(2);
+      return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function roleOptions(selected) {
+      return Object.entries(ROLE_DEFS).map(([key, role]) => (
+        `<option value="${key}" ${key === selected ? "selected" : ""}>${role.label}</option>`
+      )).join("");
+    }
+
+    function pumpheadOptions(selected) {
+      return PUMPHEADS.map((pumphead) => (
+        `<option value="${pumphead.id}" ${pumphead.id === selected ? "selected" : ""}>${pumphead.label}</option>`
+      )).join("");
+    }
+
+    function boreOptions(selected, pumphead) {
+      const available = availableBoresForPumphead(pumphead);
+      return BORES.map((bore) => {
+        const suffix = available.length === 0 || available.includes(bore) ? "" : " (unavailable)";
+        return `<option value="${bore}" ${bore === selected ? "selected" : ""}>${bore}${suffix}</option>`;
+      }).join("");
+    }
+
+    function installOptions(selected) {
+      return INSTALL_OPTIONS.map((item) => (
+        `<option value="${item.value}" ${item.value === selected ? "selected" : ""}>${item.label}</option>`
+      )).join("");
+    }
+
+    function availableBoresForPumphead(pumphead) {
+      if (pumphead === "313D") return Object.keys(DATASHEET_313D);
+      if (DRIVESURE_TABLE[pumphead]) return Object.keys(DRIVESURE_TABLE[pumphead]);
+      return [];
+    }
+
+    function getBasis(pumphead, bore) {
+      if (pumphead === "313D" && DATASHEET_313D[bore]) {
+        const row = DATASHEET_313D[bore];
+        return {
+          available: true,
+          source: "313D pumphead datasheet table",
+          status: "vendor nominal",
+          inferred: false,
+          mlRev: row.mlRev,
+          maxFlow: row.maxContinuous,
+          maxIntermittent: row.maxIntermittent,
+          minFlow: null,
+          driveMaxRpm: 410,
+          continuousRpmLimit: 400,
+          row
+        };
+      }
+
+      const driveRows = DRIVESURE_TABLE[pumphead];
+      const driveRow = driveRows ? driveRows[bore] : null;
+      if (driveRow) {
+        return {
+          available: true,
+          source: "DriveSure table, inferred from max flow at 410 rpm",
+          status: "DriveSure-inferred",
+          inferred: true,
+          mlRev: driveRow.max / 410,
+          maxFlow: driveRow.max,
+          maxIntermittent: null,
+          minFlow: driveRow.min,
+          driveMaxRpm: 410,
+          continuousRpmLimit: null,
+          row: driveRow
+        };
+      }
+
+      return {
+        available: false,
+        source: "No detailed flow table loaded",
+        status: "unavailable",
+        inferred: false,
+        mlRev: NaN,
+        maxFlow: NaN,
+        maxIntermittent: null,
+        minFlow: null,
+        driveMaxRpm: 410,
+        continuousRpmLimit: pumphead === "313D" ? 400 : null,
+        row: null
+      };
+    }
+
+    function getSelectedChannel() {
+      return state.channels.find((channel) => channel.id === state.selectedId) || state.channels[0];
+    }
+
+    function getMeasurementChannel() {
+      return state.channels.find((channel) => channel.id === state.measurementId) || getSelectedChannel();
+    }
+
+    function channelOd(channel) {
+      const bore = toNumber(channel.bore, 0);
+      const wall = toNumber(channel.wall, 0);
+      const datasheetOd = channel.pumphead === "313D" && channel.wall === 1.6 && DATASHEET_313D[channel.bore]
+        ? DATASHEET_313D[channel.bore].od
+        : null;
+      return datasheetOd || (bore + 2 * wall);
+    }
+
+    function computeScenarioValues(nominal, activeBias, activeUncertainty) {
+      if (!Number.isFinite(nominal)) {
+        return { center: NaN, low: NaN, high: NaN };
+      }
+      const center = nominal * (1 + activeBias / 100);
+      return {
+        center,
+        low: center * (1 - activeUncertainty / 100),
+        high: center * (1 + activeUncertainty / 100)
+      };
+    }
+
+    function computeChannel(channel, activeBias = 0, activeUncertainty = 0) {
+      const basis = getBasis(channel.pumphead, channel.bore);
+      const rpm = toNumber(channel.rpm, 0);
+      const measured = channel.measured === "" ? NaN : toNumber(channel.measured, NaN);
+      const nominal = basis.available ? rpm * basis.mlRev : NaN;
+      const granularity = basis.available ? 0.1 * basis.mlRev : NaN;
+      const overDrive = basis.available && rpm > 410;
+      const overContinuous = basis.available && channel.pumphead === "313D" && rpm > 400;
+      const overFlow = basis.available && Number.isFinite(basis.maxFlow) && nominal > basis.maxFlow;
+      const overLimit = overDrive || overContinuous || overFlow;
+      const ratio = Number.isFinite(measured) && measured > 0 && Number.isFinite(nominal) && nominal > 0 ? measured / nominal : NaN;
+      const bias = Number.isFinite(ratio) ? (ratio - 1) * 100 : NaN;
+      const correction = Number.isFinite(measured) && measured > 0 && Number.isFinite(nominal) ? nominal / measured : NaN;
+      const scenario = computeScenarioValues(nominal, activeBias, activeUncertainty);
+
+      let status = "vendor nominal";
+      if (!basis.available) status = "unavailable";
+      else if (overLimit) status = "over limit";
+      else if (Number.isFinite(measured) && measured > 0) status = "measured one-run";
+
+      return {
+        channel,
+        basis,
+        nominal,
+        granularity,
+        measured,
+        ratio,
+        bias,
+        correction,
+        scenario,
+        overDrive,
+        overContinuous,
+        overFlow,
+        overLimit,
+        status
+      };
+    }
+
+    function getScenarioInputs() {
+      const activeFactors = state.factors.filter((factor) => factor.active);
+      const activeBias = activeFactors.reduce((sum, factor) => sum + toNumber(factor.bias, 0), 0);
+      const activeUncertainty = Math.sqrt(activeFactors.reduce((sum, factor) => {
+        const contribution = toNumber(factor.uncertainty, 0);
+        return sum + contribution * contribution;
+      }, 0));
+      return { activeFactors, activeBias, activeUncertainty };
+    }
+
+    function computeSystem() {
+      const scenarioInputs = getScenarioInputs();
+      const channelComputes = state.channels.map((channel) => computeChannel(channel, scenarioInputs.activeBias, scenarioInputs.activeUncertainty));
+      const enabledComputes = channelComputes.filter((item) => item.channel.enabled);
+      const loadedEnabled = enabledComputes.filter((item) => item.basis.available && Number.isFinite(item.nominal));
+      const activeChannels = enabledComputes.length;
+      const grossNominal = loadedEnabled.reduce((sum, item) => sum + item.nominal, 0);
+      const processInflow = loadedEnabled.reduce((sum, item) => sum + (ROLE_DEFS[item.channel.role].sign > 0 ? item.nominal : 0), 0);
+      const processOutflow = loadedEnabled.reduce((sum, item) => sum + (ROLE_DEFS[item.channel.role].sign < 0 ? item.nominal : 0), 0);
+      const netBalance = processInflow - processOutflow;
+      const absBalanceError = Math.abs(netBalance);
+      const balanceErrorPercent = absBalanceError / Math.max(processInflow, processOutflow, 1) * 100;
+      const recirculationGross = loadedEnabled.reduce((sum, item) => sum + (ROLE_DEFS[item.channel.role].group === "recirculation" ? item.nominal : 0), 0);
+      const transferGross = loadedEnabled.reduce((sum, item) => sum + (ROLE_DEFS[item.channel.role].group === "transfer" ? item.nominal : 0), 0);
+      const measuredCount = enabledComputes.filter((item) => Number.isFinite(item.measured) && item.measured > 0).length;
+      const measurementCoverage = activeChannels ? measuredCount / activeChannels * 100 : 0;
+      const unavailableCount = enabledComputes.filter((item) => !item.basis.available).length;
+      const overLimitCount = enabledComputes.filter((item) => item.overLimit).length;
+      const largestSingle = loadedEnabled.reduce((max, item) => Math.max(max, item.nominal), 0);
+      const granularities = loadedEnabled.map((item) => item.granularity).filter((value) => Number.isFinite(value));
+      const smallestGranularity = granularities.length ? Math.min(...granularities) : NaN;
+      const largestGranularity = granularities.length ? Math.max(...granularities) : NaN;
+
+      const systemScenarioGrossCenter = loadedEnabled.reduce((sum, item) => sum + item.scenario.center, 0);
+      const systemScenarioGrossLow = loadedEnabled.reduce((sum, item) => sum + item.scenario.low, 0);
+      const systemScenarioGrossHigh = loadedEnabled.reduce((sum, item) => sum + item.scenario.high, 0);
+
+      const positive = loadedEnabled.filter((item) => ROLE_DEFS[item.channel.role].sign > 0);
+      const negative = loadedEnabled.filter((item) => ROLE_DEFS[item.channel.role].sign < 0);
+      const scenarioInCenter = positive.reduce((sum, item) => sum + item.scenario.center, 0);
+      const scenarioInLow = positive.reduce((sum, item) => sum + item.scenario.low, 0);
+      const scenarioInHigh = positive.reduce((sum, item) => sum + item.scenario.high, 0);
+      const scenarioOutCenter = negative.reduce((sum, item) => sum + item.scenario.center, 0);
+      const scenarioOutLow = negative.reduce((sum, item) => sum + item.scenario.low, 0);
+      const scenarioOutHigh = negative.reduce((sum, item) => sum + item.scenario.high, 0);
+      const scenarioNetCenter = scenarioInCenter - scenarioOutCenter;
+      const scenarioNetLow = scenarioInLow - scenarioOutHigh;
+      const scenarioNetHigh = scenarioInHigh - scenarioOutLow;
+
+      const mostAffected = loadedEnabled.reduce((best, item) => {
+        const spread = Math.abs(item.scenario.high - item.scenario.low);
+        if (!best || spread > best.spread) return { item, spread };
+        return best;
+      }, null);
+
+      let balanceStatus = "Good";
+      if (balanceErrorPercent > 10) balanceStatus = "Warning";
+      else if (balanceErrorPercent > 2) balanceStatus = "Caution";
+
+      return {
+        ...scenarioInputs,
+        channelComputes,
+        enabledComputes,
+        loadedEnabled,
+        activeChannels,
+        grossNominal,
+        processInflow,
+        processOutflow,
+        netBalance,
+        absBalanceError,
+        balanceErrorPercent,
+        recirculationGross,
+        transferGross,
+        measuredCount,
+        measurementCoverage,
+        unavailableCount,
+        overLimitCount,
+        largestSingle,
+        smallestGranularity,
+        largestGranularity,
+        systemScenarioGrossCenter,
+        systemScenarioGrossLow,
+        systemScenarioGrossHigh,
+        scenarioInCenter,
+        scenarioInLow,
+        scenarioInHigh,
+        scenarioOutCenter,
+        scenarioOutLow,
+        scenarioOutHigh,
+        scenarioNetCenter,
+        scenarioNetLow,
+        scenarioNetHigh,
+        mostAffected,
+        balanceStatus
+      };
+    }
+
+    function statusBadge(status, inferred) {
+      if (status === "measured one-run") return `<span class="badge measured">measured one-run</span>`;
+      if (status === "unavailable") return `<span class="badge unavailable">unavailable</span>`;
+      if (status === "over limit") return `<span class="badge limit">over limit</span>`;
+      if (inferred) return `<span class="badge inferred">DriveSure-inferred</span>`;
+      return `<span class="badge vendor">vendor nominal</span>`;
+    }
+
+    function metricCard(label, value, meta, tone = "") {
+      return `
+        <article class="metric-card ${tone}">
+          <div class="metric-label">${label}</div>
+          <div class="metric-value">${value}</div>
+          <div class="metric-meta">${meta}</div>
+        </article>
+      `;
+    }
+
+    function miniCard(label, value) {
+      return `<div class="mini-card"><span>${label}</span><strong>${value}</strong></div>`;
+    }
+
+    function balanceTone(status) {
+      if (status === "Good") return "good";
+      if (status === "Caution") return "caution";
+      return "warning";
+    }
+
+    function renderStatic() {
+      els.detailDriveSelect.innerHTML = DRIVE_CONTROLS.map((control) => (
+        `<option value="${control.value}" ${control.value === state.drive ? "selected" : ""}>${control.label}</option>`
+      )).join("");
+
+      els.detailPumpheadButtons.innerHTML = PUMPHEADS.map((pumphead) => `
+        <button type="button"
+          data-pumphead="${pumphead.id}"
+          data-loaded="${pumphead.loaded}"
+          aria-pressed="false"
+          title="${pumphead.basis}">
+          ${pumphead.label}
+        </button>
+      `).join("");
+
+      els.scenarioCards.innerHTML = state.factors.map((factor) => `
+        <article class="factor-card">
+          <div class="factor-top">
+            <input type="checkbox" id="factor-${factor.id}" data-factor-toggle="${factor.id}" ${factor.active ? "checked" : ""}>
+            <div>
+              <label class="factor-title" for="factor-${factor.id}">${factor.name}</label>
+              <p class="help">Placeholder contribution. Edit before using in a meeting.</p>
+            </div>
+          </div>
+          <div class="factor-fields">
+            <div>
+              <label for="bias-${factor.id}">Bias (%)</label>
+              <input id="bias-${factor.id}" type="number" step="0.1" data-factor-bias="${factor.id}" value="${factor.bias}">
+            </div>
+            <div>
+              <label for="uncertainty-${factor.id}">Uncertainty (+/-% )</label>
+              <input id="uncertainty-${factor.id}" type="number" min="0" step="0.1" data-factor-uncertainty="${factor.id}" value="${factor.uncertainty}">
+            </div>
+          </div>
+        </article>
+      `).join("");
+
+      els.datasheetTableBody.innerHTML = Object.values(DATASHEET_313D).map((row) => `
+        <tr>
+          <td>${row.bore}</td>
+          <td>${row.wall}</td>
+          <td>${row.od}</td>
+          <td>${fmtMlRev(row.mlRev)}</td>
+          <td>${fmtFlow(row.maxContinuous)}</td>
+          <td>${fmtFlow(row.maxIntermittent)}</td>
+        </tr>
+      `).join("");
+
+      const driveRows = [];
+      Object.entries(DRIVESURE_TABLE).forEach(([pumphead, rows]) => {
+        BORES.forEach((bore) => {
+          const row = rows[bore];
+          if (!row) {
+            driveRows.push(`
+              <tr>
+                <td>${pumphead}</td>
+                <td>${bore}</td>
+                <td colspan="3">Unavailable in loaded table</td>
+              </tr>
+            `);
+            return;
+          }
+          driveRows.push(`
+            <tr>
+              <td>${pumphead}</td>
+              <td>${bore}</td>
+              <td>${fmtFlow(row.min)}</td>
+              <td>${fmtFlow(row.max)}</td>
+              <td>${fmtMlRev(row.max / 410)}</td>
+            </tr>
+          `);
+        });
+      });
+      els.driveTableBody.innerHTML = driveRows.join("");
+
+      const schema = {
+        ROLE_DEFS,
+        channelSchema: {
+          id: "P-01",
+          enabled: true,
+          role: "mainInlet",
+          pumphead: "313D",
+          bore: "3.2",
+          wall: 1.6,
+          rpm: 60,
+          install: "nominal",
+          measured: ""
+        }
+      };
+      els.schemaBlock.textContent = JSON.stringify(schema, null, 2);
+      els.lastUpdated.textContent = "Revision 1 · Last updated July 2, 2026";
+    }
+
+    function render() {
+      isRendering = true;
+      normalizeSelection();
+      const system = computeSystem();
+      renderTopology(system);
+      renderSystemCards(system);
+      renderMatrix(system);
+      renderDetail(system);
+      renderScenario(system);
+      renderDecomposition(system);
+      renderMeasurement(system);
+      els.channelCountInput.value = state.channels.length;
+      isRendering = false;
+    }
+
+    function normalizeSelection() {
+      if (!state.channels.some((channel) => channel.id === state.selectedId)) {
+        state.selectedId = state.channels[0].id;
+      }
+      if (!state.channels.some((channel) => channel.id === state.measurementId)) {
+        state.measurementId = state.selectedId;
+      }
+    }
+
+    function renderTopology(system) {
+      const zones = {
+        "process-in": [],
+        "process-out": [],
+        recirculation: [],
+        transfer: [],
+        measurement: [],
+        collection: []
+      };
+      const zoneLabels = {
+        "process-in": "Process Inflow",
+        "process-out": "Process Outflow",
+        recirculation: "Recirculation Loop",
+        transfer: "Bypass / Transfer",
+        measurement: "Measurement Lines",
+        collection: "Collection / Drain"
+      };
+      const largest = Math.max(system.largestSingle, 1);
+      system.enabledComputes.forEach((item) => {
+        const role = ROLE_DEFS[item.channel.role];
+        const width = item.basis.available ? clamp(item.nominal / largest * 100, 7, 100) : 7;
+        const pill = `
+          <button type="button" class="channel-pill" data-select-channel="${item.channel.id}" aria-current="${item.channel.id === state.selectedId ? "true" : "false"}">
+            <span class="pill-top"><span>${item.channel.id}</span>${statusBadge(item.status, item.basis.inferred)}</span>
+            <span class="help">${role.label} · ${fmtFlow(item.nominal)} mL/min</span>
+            <span class="flow-bar" aria-hidden="true"><span style="width:${width}%"></span></span>
+          </button>
+        `;
+        const group = zones[role.group] ? role.group : "transfer";
+        zones[group].push(pill);
+      });
+
+      els.topologyChannels.innerHTML = Object.entries(zones)
+        .filter(([, pills]) => pills.length)
+        .map(([group, pills]) => (
+          `<div class="channel-zone zone-${group}">
+            <div class="topology-lane-title">${zoneLabels[group]}</div>
+            ${pills.join("")}
+          </div>`
+        )).join("");
+    }
+
+    function renderSystemCards(system) {
+      const tone = balanceTone(system.balanceStatus);
+      els.systemResultCards.innerHTML = [
+        metricCard("Active channels", `${system.activeChannels}`, `${state.channels.length} configured channels`),
+        metricCard("Gross nominal flow", `${fmtFlow(system.grossNominal)} mL/min`, "Sum across enabled channels with loaded basis"),
+        metricCard("Process inflow", `${fmtFlow(system.processInflow)} mL/min`, "Roles with positive balance sign"),
+        metricCard("Process outflow", `${fmtFlow(system.processOutflow)} mL/min`, "Roles with negative balance sign"),
+        metricCard("Net balance error", `${fmtFlow(system.netBalance)} mL/min`, `System balance ${system.balanceStatus}; ${fmtPercent(system.balanceErrorPercent)} mismatch`, tone),
+        metricCard("Recirculation gross flow", `${fmtFlow(system.recirculationGross)} mL/min`, `Transfer gross: ${fmtFlow(system.transferGross)} mL/min`),
+        metricCard("Measurement coverage", `${fmtPercent(system.measurementCoverage)}`, `${system.measuredCount} of ${system.activeChannels} enabled channels`),
+        metricCard("Unavailable / over-limit channels", `${system.unavailableCount} / ${system.overLimitCount}`, "Enabled channels requiring attention", system.unavailableCount || system.overLimitCount ? "warning" : "good"),
+        metricCard("System scenario gross band", `${fmtFlow(system.systemScenarioGrossLow)} - ${fmtFlow(system.systemScenarioGrossHigh)}`, `Center ${fmtFlow(system.systemScenarioGrossCenter)} mL/min`, "caution"),
+        metricCard("System scenario net balance band", `${fmtFlow(system.scenarioNetLow)} - ${fmtFlow(system.scenarioNetHigh)}`, `Center ${fmtFlow(system.scenarioNetCenter)} mL/min`, "caution")
+      ].join("");
+
+      const warnings = [];
+      warnings.push({
+        text: "System balance thresholds are discussion defaults only: Good <= 2%, Caution > 2% and <= 10%, Warning > 10%.",
+        error: false
+      });
+      warnings.push({
+        text: "313D pumphead datasheet uses a 400 rpm continuous max while the DriveSure page gives performance to 410 rpm. This prototype shows both and does not resolve that mismatch.",
+        error: false
+      });
+      if (system.balanceStatus !== "Good") {
+        warnings.push({
+          text: `Flow mismatch warning: process inflow and outflow differ by ${fmtFlow(system.absBalanceError)} mL/min (${fmtPercent(system.balanceErrorPercent)}).`,
+          error: system.balanceStatus === "Warning"
+        });
+      }
+      if (system.unavailableCount > 0) {
+        warnings.push({
+          text: `${system.unavailableCount} enabled channel(s) have no loaded pumphead/tube calculation basis. 316D and 318D are selectable but detailed flow tables are not loaded in this prototype.`,
+          error: true
+        });
+      }
+      if (system.overLimitCount > 0) {
+        warnings.push({
+          text: `${system.overLimitCount} enabled channel(s) are above a loaded continuous or DriveSure table range.`,
+          error: true
+        });
+      }
+      if (system.measurementCoverage < 100 && system.activeChannels > 0) {
+        warnings.push({
+          text: `Measurement coverage is ${system.measuredCount} of ${system.activeChannels} enabled channels. Installed-system variability is still unmeasured for remaining channels.`,
+          error: false
+        });
+      }
+      els.systemWarnings.innerHTML = warnings.map((warning) => (
+        `<div class="warning-item ${warning.error ? "error" : ""}">${warning.text}</div>`
+      )).join("");
+    }
+
+    function renderMatrix(system) {
+      els.channelMatrixBody.innerHTML = system.channelComputes.map((item) => {
+        const channel = item.channel;
+        const role = ROLE_DEFS[channel.role];
+        const ratioBias = Number.isFinite(item.ratio) ? `${item.ratio.toFixed(3)} / ${fmtPercent(item.bias)}` : "-";
+        return `
+          <tr class="channel-row ${channel.id === state.selectedId ? "selected" : ""}" data-select-channel="${channel.id}">
+            <td data-label="Enabled"><input type="checkbox" data-channel-field="enabled" data-channel-id="${channel.id}" ${channel.enabled ? "checked" : ""} aria-label="Enable ${channel.id}"></td>
+            <td data-label="Pump ID"><strong>${channel.id}</strong></td>
+            <td data-label="Role"><select data-channel-field="role" data-channel-id="${channel.id}" aria-label="${channel.id} role">${roleOptions(channel.role)}</select></td>
+            <td data-label="Pumphead"><select data-channel-field="pumphead" data-channel-id="${channel.id}" aria-label="${channel.id} pumphead">${pumpheadOptions(channel.pumphead)}</select></td>
+            <td data-label="Bore"><select data-channel-field="bore" data-channel-id="${channel.id}" aria-label="${channel.id} tube bore">${boreOptions(channel.bore, channel.pumphead)}</select></td>
+            <td data-label="Wall"><input type="number" min="0" step="0.1" data-channel-field="wall" data-channel-id="${channel.id}" value="${channel.wall}" aria-label="${channel.id} tube wall"></td>
+            <td data-label="OD">${fmtFlow(channelOd(channel))} mm</td>
+            <td data-label="RPM"><input type="number" min="0" step="0.1" data-channel-field="rpm" data-channel-id="${channel.id}" value="${fmtRpm(channel.rpm)}" aria-label="${channel.id} rpm"></td>
+            <td data-label="Nominal flow">${fmtFlow(item.nominal)} mL/min</td>
+            <td data-label="Granularity">${fmtFlow(item.granularity)} mL/min</td>
+            <td data-label="Installation"><select data-channel-field="install" data-channel-id="${channel.id}" aria-label="${channel.id} installation">${installOptions(channel.install)}</select></td>
+            <td data-label="Measured flow"><input type="number" min="0" step="0.001" data-channel-field="measured" data-channel-id="${channel.id}" value="${escapeHtml(channel.measured)}" placeholder="blank" aria-label="${channel.id} measured flow"></td>
+            <td data-label="Ratio / bias">${ratioBias}</td>
+            <td data-label="Status">${statusBadge(item.status, item.basis.inferred)}<div class="help">${role.group}</div></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDetail(system) {
+      const selected = getSelectedChannel();
+      const detail = system.channelComputes.find((item) => item.channel.id === selected.id) || computeChannel(selected, system.activeBias, system.activeUncertainty);
+      els.selectedChannelSelect.innerHTML = state.channels.map((channel) => (
+        `<option value="${channel.id}" ${channel.id === selected.id ? "selected" : ""}>${channel.id} · ${ROLE_DEFS[channel.role].label}</option>`
+      )).join("");
+      els.detailDriveSelect.value = state.drive;
+      els.detailBoreSelect.innerHTML = boreOptions(selected.bore, selected.pumphead);
+      els.detailBoreSelect.value = selected.bore;
+      els.detailWallInput.value = selected.wall;
+      els.detailOdOutput.value = `${fmtFlow(channelOd(selected))} mm`;
+      els.detailRpmInput.value = fmtRpm(selected.rpm);
+      els.detailMeasuredInput.value = selected.measured;
+      els.detailTargetFlowInput.value = detail.basis.available ? fmtFlow(detail.nominal) : "";
+      els.detailRpmInput.disabled = state.mode === "flow";
+      els.detailTargetFlowInput.disabled = state.mode === "rpm";
+
+      els.detailModeToggle.querySelectorAll("button").forEach((button) => {
+        button.setAttribute("aria-pressed", button.dataset.mode === state.mode ? "true" : "false");
+      });
+      els.detailPumpheadButtons.querySelectorAll("button").forEach((button) => {
+        button.setAttribute("aria-pressed", button.dataset.pumphead === selected.pumphead ? "true" : "false");
+      });
+
+      if (!detail.basis.available) {
+        els.detailPumpheadHelp.textContent = `${selected.pumphead} with ${selected.bore} mm bore has no detailed flow table loaded. Calculations are disabled for this row until a loaded combination is selected.`;
+      } else if (selected.pumphead === "313D") {
+        els.detailPumpheadHelp.textContent = "313D uses the embedded pumphead datasheet table for 1.6 mm wall tubing.";
+      } else {
+        els.detailPumpheadHelp.textContent = `${selected.pumphead} uses DriveSure comparison values. mL/rev is inferred from max flow at 410 rpm, not from the 313D datasheet table.`;
+      }
+
+      const limitTone = detail.overLimit ? "warning" : (detail.basis.available ? "good" : "warning");
+      els.detailResultCards.innerHTML = [
+        metricCard("Nominal flow", `${fmtFlow(detail.nominal)} mL/min`, detail.basis.source, detail.basis.available ? "good" : "warning"),
+        metricCard("mL per revolution", `${fmtMlRev(detail.basis.mlRev)} mL/rev`, detail.basis.inferred ? "Inferred from DriveSure table" : "313D datasheet value"),
+        metricCard("0.1 rpm granularity", `${fmtFlow(detail.granularity)} mL/min`, "DriveSure speed resolution basis"),
+        metricCard("Range status", detail.overLimit ? "Over limit" : (detail.basis.available ? "Within loaded basis" : "Unavailable"), detailStatusMeta(detail), limitTone),
+        metricCard("Measured ratio", Number.isFinite(detail.ratio) ? detail.ratio.toFixed(3) : "-", Number.isFinite(detail.bias) ? `${fmtPercent(detail.bias)} measured bias` : "No local measurement entered"),
+        metricCard("Correction factor", Number.isFinite(detail.correction) ? detail.correction.toFixed(3) : "-", "One run is not validation")
+      ].join("");
+
+      const badges = [];
+      if (detail.basis.available && !detail.basis.inferred) badges.push(`<span class="badge vendor">Vendor nominal</span>`);
+      if (detail.basis.available && detail.basis.inferred) badges.push(`<span class="badge inferred">DriveSure-inferred</span>`);
+      badges.push(`<span class="badge placeholder">Placeholder scenario</span>`);
+      if (Number.isFinite(detail.measured) && detail.measured > 0) badges.push(`<span class="badge measured">Local measurement entered</span>`);
+      if (!detail.basis.available) badges.push(`<span class="badge unavailable">No loaded table</span>`);
+      els.detailBadges.innerHTML = badges.join("");
+
+      const warnings = [];
+      if (!detail.basis.available) {
+        warnings.push({ text: "Selected pumphead/tube combination has no loaded calculation basis.", error: true });
+      }
+      if (selected.pumphead === "313D" && detail.overContinuous) {
+        warnings.push({ text: `Requested speed ${fmtRpm(selected.rpm)} rpm is above the 313D 400 rpm continuous basis.`, error: true });
+      }
+      if (detail.overDrive) {
+        warnings.push({ text: `Requested speed ${fmtRpm(selected.rpm)} rpm is above the DriveSure 410 rpm performance-table maximum.`, error: true });
+      }
+      if (detail.overFlow) {
+        warnings.push({ text: `Requested flow ${fmtFlow(detail.nominal)} mL/min exceeds the loaded table max of ${fmtFlow(detail.basis.maxFlow)} mL/min.`, error: true });
+      }
+      if (selected.wall !== 1.6) {
+        warnings.push({ text: "Loaded 313D datasheet flow table is for 1.6 mm wall tubing; alternate wall values are assumptions in this prototype.", error: false });
+      }
+      els.detailWarnings.innerHTML = warnings.map((warning) => (
+        `<div class="warning-item ${warning.error ? "error" : ""}">${warning.text}</div>`
+      )).join("");
+    }
+
+    function detailStatusMeta(detail) {
+      if (!detail.basis.available) return "No detailed table loaded for this combination";
+      if (detail.overContinuous) return "Above 313D 400 rpm continuous basis";
+      if (detail.overDrive) return "Above DriveSure 410 rpm table range";
+      if (detail.overFlow) return "Above loaded max flow row";
+      if (detail.channel.pumphead === "313D") return `Compared with ${fmtFlow(detail.basis.maxFlow)} mL/min continuous row`;
+      return "Within loaded DriveSure comparison row";
+    }
+
+    function renderScenario(system) {
+      const mostAffectedText = system.mostAffected
+        ? `${system.mostAffected.item.channel.id} (${fmtFlow(system.mostAffected.spread)} mL/min band width)`
+        : "-";
+      els.scenarioSummary.innerHTML = [
+        miniCard("Active bias", fmtPercent(system.activeBias)),
+        miniCard("RSS uncertainty", `+/- ${fmtPercent(system.activeUncertainty)}`),
+        miniCard("System gross low / center / high", `${fmtFlow(system.systemScenarioGrossLow)} / ${fmtFlow(system.systemScenarioGrossCenter)} / ${fmtFlow(system.systemScenarioGrossHigh)}`),
+        miniCard("Net balance low / center / high", `${fmtFlow(system.scenarioNetLow)} / ${fmtFlow(system.scenarioNetCenter)} / ${fmtFlow(system.scenarioNetHigh)}`),
+        miniCard("Most affected enabled channel", mostAffectedText)
+      ].join("");
+      els.scenarioTargetSelect.value = state.scenarioTarget;
+      renderBand(system);
+    }
+
+    function getBandValues(system) {
+      if (state.scenarioTarget === "inflow") {
+        return { nominal: system.processInflow, center: system.scenarioInCenter, low: system.scenarioInLow, high: system.scenarioInHigh };
+      }
+      if (state.scenarioTarget === "outflow") {
+        return { nominal: system.processOutflow, center: system.scenarioOutCenter, low: system.scenarioOutLow, high: system.scenarioOutHigh };
+      }
+      if (state.scenarioTarget === "net") {
+        return { nominal: system.netBalance, center: system.scenarioNetCenter, low: system.scenarioNetLow, high: system.scenarioNetHigh };
+      }
+      if (state.scenarioTarget === "selected") {
+        const selected = system.channelComputes.find((item) => item.channel.id === state.selectedId);
+        return selected ? { nominal: selected.nominal, center: selected.scenario.center, low: selected.scenario.low, high: selected.scenario.high } : { nominal: NaN, center: NaN, low: NaN, high: NaN };
+      }
+      return { nominal: system.grossNominal, center: system.systemScenarioGrossCenter, low: system.systemScenarioGrossLow, high: system.systemScenarioGrossHigh };
+    }
+
+    function scenarioTargetLabel() {
+      if (state.scenarioTarget === "inflow") return "Process inflow";
+      if (state.scenarioTarget === "outflow") return "Process outflow";
+      if (state.scenarioTarget === "net") return "Net process balance";
+      if (state.scenarioTarget === "selected") return `${state.selectedId} selected pump`;
+      return "System gross flow";
+    }
+
+    function renderBand(system) {
+      const values = getBandValues(system);
+      if (![values.nominal, values.center, values.low, values.high].every(Number.isFinite)) {
+        els.scenarioVisualTarget.textContent = scenarioTargetLabel();
+        els.scenarioVisualNominal.textContent = "-";
+        els.scenarioVisualCenter.textContent = "-";
+        els.scenarioVisualRange.textContent = "-";
+        els.scenarioVisualDelta.textContent = "-";
+        els.scenarioRangeBar.style.left = "0%";
+        els.scenarioRangeBar.style.width = "0%";
+        els.scenarioNominalTick.style.left = "0%";
+        els.scenarioCenterTick.style.left = "0%";
+        els.scenarioLowLabel.textContent = "-";
+        els.scenarioHighLabel.textContent = "-";
+        els.scenarioNoSpread.textContent = "Selected target does not have a loaded calculation basis.";
+        els.scenarioNoSpread.hidden = false;
+        els.scenarioFactorImpact.innerHTML = renderFactorImpact(system);
+        return;
+      }
+
+      const centerDelta = values.center - values.nominal;
+      const deltaPercent = values.nominal !== 0 ? centerDelta / Math.abs(values.nominal) * 100 : NaN;
+      const lowHighText = `${fmtFlow(values.low)} - ${fmtFlow(values.high)} mL/min`;
+      els.scenarioVisualTarget.textContent = scenarioTargetLabel();
+      els.scenarioVisualNominal.textContent = `${fmtFlow(values.nominal)} mL/min`;
+      els.scenarioVisualCenter.textContent = `${fmtFlow(values.center)} mL/min`;
+      els.scenarioVisualRange.textContent = lowHighText;
+      els.scenarioVisualDelta.textContent = `${centerDelta >= 0 ? "+" : ""}${fmtFlow(centerDelta)} mL/min${Number.isFinite(deltaPercent) ? ` (${centerDelta >= 0 ? "+" : ""}${fmtPercent(deltaPercent)})` : ""}`;
+
+      const lowValue = Math.min(values.nominal, values.center, values.low, values.high);
+      const highValue = Math.max(values.nominal, values.center, values.low, values.high);
+      const span = Math.max(highValue - lowValue, Math.abs(highValue) * 0.08, 1);
+      const scaleMin = lowValue - span * 0.18;
+      const scaleMax = highValue + span * 0.18;
+      const range = Math.max(scaleMax - scaleMin, 1);
+      const toPct = (value) => clamp(((value - scaleMin) / range) * 100, 0, 100);
+      const bandLeft = toPct(values.low);
+      const bandRight = toPct(values.high);
+      const hasScenarioChange = system.activeFactors.length > 0 || Math.abs(values.high - values.low) > 0.000001 || Math.abs(centerDelta) > 0.000001;
+      els.scenarioRangeBar.style.left = `${Math.min(bandLeft, bandRight)}%`;
+      els.scenarioRangeBar.style.width = `${Math.max(hasScenarioChange ? 0.8 : 0.25, Math.abs(bandRight - bandLeft))}%`;
+      els.scenarioNominalTick.style.left = `${toPct(values.nominal)}%`;
+      els.scenarioCenterTick.style.left = `${toPct(values.center)}%`;
+      els.scenarioLowLabel.textContent = `${fmtFlow(scaleMin)} mL/min`;
+      els.scenarioHighLabel.textContent = `${fmtFlow(scaleMax)} mL/min`;
+      els.scenarioNoSpread.textContent = hasScenarioChange
+        ? "Range is based on the active placeholder factors above."
+        : "No active scenario factors yet. Toggle factors above to create a discussion band.";
+      els.scenarioNoSpread.hidden = false;
+      els.scenarioFactorImpact.innerHTML = renderFactorImpact(system);
+    }
+
+    function renderFactorImpact(system) {
+      if (!system.activeFactors.length) {
+        return `<p class="factor-empty">No factors active. Toggle a card above to show which assumptions drive the scenario band.</p>`;
+      }
+
+      const maxUncertainty = Math.max(...system.activeFactors.map((factor) => Math.abs(toNumber(factor.uncertainty, 0))), 1);
+      return system.activeFactors.map((factor) => {
+        const uncertainty = Math.abs(toNumber(factor.uncertainty, 0));
+        const width = clamp(uncertainty / maxUncertainty * 100, 4, 100);
+        return `
+          <div class="factor-impact-row">
+            <strong>${factor.name}</strong>
+            <span class="factor-impact-meta">${fmtPercent(toNumber(factor.bias, 0))} bias · +/- ${fmtPercent(uncertainty)}</span>
+            <span class="factor-impact-bar" aria-hidden="true"><span style="width:${width}%"></span></span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function label(kind, text) {
+      return `<span class="status-label ${kind}">${text}</span>`;
+    }
+
+    function renderDecomposition(system) {
+      const selected = getSelectedChannel();
+      const selectedCompute = system.channelComputes.find((item) => item.channel.id === selected.id);
+      const rows = [
+        ["Drive speed command/resolution", `Drive/control: ${driveLabel(state.drive)}; smallest granularity ${fmtFlow(system.smallestGranularity)} mL/min; largest granularity ${fmtFlow(system.largestGranularity)} mL/min`, label("documented", "documented"), "Confirm actual drive family, command source, scaling, limits, and logged setpoints for each channel."],
+        ["Pumphead displacement table", selectedCompute && selectedCompute.basis.available ? `Selected ${selected.id}: ${fmtMlRev(selectedCompute.basis.mlRev)} mL/rev from ${selectedCompute.basis.source}` : "Selected channel has no loaded displacement value", selectedCompute && selectedCompute.basis.inferred ? label("inferred", "vendor nominal") : label("vendor", "vendor nominal"), "Measure delivered flow locally across the operating range for each role."],
+        ["Tube bore/wall/material per channel", `${system.activeChannels} enabled channel(s); OD calculated from bore and wall, with 313D approximate OD shown when applicable`, label("assumed", "user assumption"), "Confirm tube part number, ID, OD, wall, material, lot, and age for each channel."],
+        ["Tube seating/reload per channel", "Installation condition is tracked per channel but not measured here", label("placeholder", "placeholder"), "Run reload repeatability checks and deliberate offset checks on representative channels."],
+        ["Shared manifolds / pressure coupling", "Global placeholder factor available; no pressure coupling data loaded", label("placeholder", "placeholder"), "Measure inlet/discharge pressure or height/head during paired and multi-channel runs."],
+        ["Flow path role assignment", "Roles define balance sign and group for generic system accounting", label("assumed", "user assumption"), "Map physical channels to generic roles before interpreting process balance."],
+        ["Inlet/outlet mass balance", `Nominal balance error ${fmtFlow(system.netBalance)} mL/min (${fmtPercent(system.balanceErrorPercent)})`, label(system.balanceStatus === "Good" ? "documented" : "needs", system.balanceStatus === "Good" ? "calculated" : "needs measurement"), "Compare inlet and outlet collection mass during paired runs."],
+        ["Fluid viscosity/density", "Vendor basis is water-like controlled conditions; process-fluid effects are not characterized", label("vendor", "vendor nominal"), "Record density and viscosity context and convert gravimetric measurements consistently."],
+        ["Tube age/wear", "No tube age field is loaded in this prototype", label("needs", "needs measurement"), "Record tube hours, use history, and visual condition."],
+        ["Operator reload variation", "Global placeholder factor available, but repeatability data is not loaded", label("placeholder", "placeholder"), "Repeat normal reload 3-5 times for critical channels."],
+        ["Local measurement coverage", `${system.measuredCount} of ${system.activeChannels} enabled channels have one measured flow entered`, label(system.measurementCoverage === 100 ? "measured" : "needs", system.measurementCoverage === 100 ? "measured one-run" : "needs measurement"), "Collect local flow data for all enabled channels, then repeat critical points."]
+      ];
+
+      els.decompBody.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]}</td>
+          <td>${row[3]}</td>
+        </tr>
+      `).join("");
+    }
+
+    function driveLabel(value) {
+      const found = DRIVE_CONTROLS.find((control) => control.value === value);
+      return found ? found.label : "Unknown/manual";
+    }
+
+    function renderMeasurement(system) {
+      const channel = getMeasurementChannel();
+      const computed = system.channelComputes.find((item) => item.channel.id === channel.id) || computeChannel(channel, system.activeBias, system.activeUncertainty);
+      els.measurementChannelSelect.innerHTML = state.channels.map((item) => (
+        `<option value="${item.id}" ${item.id === channel.id ? "selected" : ""}>${item.id} · ${ROLE_DEFS[item.role].label}</option>`
+      )).join("");
+      els.measurementFlowInput.value = channel.measured;
+      els.measurementRatio.textContent = Number.isFinite(computed.ratio) ? computed.ratio.toFixed(3) : "-";
+      els.measurementBias.textContent = Number.isFinite(computed.bias) ? fmtPercent(computed.bias) : "-";
+      els.measurementCorrection.textContent = Number.isFinite(computed.correction) ? computed.correction.toFixed(3) : "-";
+
+      els.measurementCoverageBody.innerHTML = system.enabledComputes.map((item) => `
+        <tr>
+          <td>${item.channel.id}</td>
+          <td>${ROLE_DEFS[item.channel.role].label}</td>
+          <td>${fmtFlow(item.nominal)} mL/min</td>
+          <td>${Number.isFinite(item.measured) ? `${fmtFlow(item.measured)} mL/min` : "-"}</td>
+          <td>${statusBadge(item.status, item.basis.inferred)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function setChannelCount(count) {
+      const nextCount = clamp(Math.round(toNumber(count, state.channels.length)), 1, 12);
+      const next = state.channels.slice(0, nextCount).map((channel, index) => ({ ...channel, id: `P-${String(index + 1).padStart(2, "0")}` }));
+      while (next.length < nextCount) {
+        const index = next.length;
+        next.push({
+          id: `P-${String(index + 1).padStart(2, "0")}`,
+          enabled: false,
+          role: index % 2 === 0 ? "auxiliaryInlet" : "collectionOutlet",
+          pumphead: "313D",
+          bore: "0.8",
+          wall: 1.6,
+          rpm: 20,
+          install: "nominal",
+          measured: ""
+        });
+      }
+      state.channels = next;
+      normalizeSelection();
+    }
+
+    function setSinglePumpView() {
+      state.channels = [{
+        id: "P-01",
+        enabled: true,
+        role: "mainInlet",
+        pumphead: "313D",
+        bore: "3.2",
+        wall: 1.6,
+        rpm: 60,
+        install: "nominal",
+        measured: ""
+      }];
+      state.selectedId = "P-01";
+      state.measurementId = "P-01";
+    }
+
+    function setDemoView() {
+      state.channels = DEFAULT_CHANNELS.map((channel) => ({ ...channel }));
+      state.selectedId = "P-01";
+      state.measurementId = "P-01";
+    }
+
+    function updateChannel(id, field, value) {
+      const channel = state.channels.find((item) => item.id === id);
+      if (!channel) return;
+      if (field === "enabled") channel.enabled = value;
+      else if (field === "wall" || field === "rpm") channel[field] = Math.max(0, toNumber(value, 0));
+      else if (field === "measured") channel.measured = value;
+      else channel[field] = value;
+    }
+
+    function openHelpModal() {
+      lastModalFocus = document.activeElement;
+      els.helpModal.hidden = false;
+      els.closeHelpButton.focus();
+    }
+
+    function closeHelpModal() {
+      els.helpModal.hidden = true;
+      if (lastModalFocus && typeof lastModalFocus.focus === "function") {
+        lastModalFocus.focus();
+      }
+    }
+
+    function bindEvents() {
+      els.openHelpButton.addEventListener("click", openHelpModal);
+      els.closeHelpButton.addEventListener("click", closeHelpModal);
+      els.helpModal.addEventListener("click", (event) => {
+        if (event.target === els.helpModal) closeHelpModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !els.helpModal.hidden) closeHelpModal();
+      });
+
+      els.channelCountInput.addEventListener("change", () => {
+        setChannelCount(els.channelCountInput.value);
+        render();
+      });
+
+      els.loadDemoButton.addEventListener("click", () => {
+        setDemoView();
+        render();
+      });
+
+      els.singlePumpButton.addEventListener("click", () => {
+        setSinglePumpView();
+        render();
+      });
+
+      els.copySelectedButton.addEventListener("click", () => {
+        const selected = getSelectedChannel();
+        state.channels.forEach((channel) => {
+          if (!channel.enabled || channel.id === selected.id) return;
+          channel.pumphead = selected.pumphead;
+          channel.bore = selected.bore;
+          channel.wall = selected.wall;
+          channel.rpm = selected.rpm;
+          channel.install = selected.install;
+        });
+        render();
+      });
+
+      els.clearMeasuredButton.addEventListener("click", () => {
+        state.channels.forEach((channel) => {
+          channel.measured = "";
+        });
+        render();
+      });
+
+      document.addEventListener("click", (event) => {
+        const selectTarget = event.target.closest("[data-select-channel]");
+        if (selectTarget) {
+          state.selectedId = selectTarget.dataset.selectChannel;
+          state.measurementId = state.selectedId;
+          render();
+        }
+      });
+
+      els.channelMatrixBody.addEventListener("input", handleChannelFieldChange);
+      els.channelMatrixBody.addEventListener("change", handleChannelFieldChange);
+
+      els.selectedChannelSelect.addEventListener("change", () => {
+        state.selectedId = els.selectedChannelSelect.value;
+        state.measurementId = state.selectedId;
+        render();
+      });
+
+      els.detailPumpheadButtons.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-pumphead]");
+        if (!button) return;
+        updateChannel(state.selectedId, "pumphead", button.dataset.pumphead);
+        render();
+      });
+
+      els.detailDriveSelect.addEventListener("change", () => {
+        state.drive = els.detailDriveSelect.value;
+        render();
+      });
+
+      els.detailModeToggle.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-mode]");
+        if (!button) return;
+        state.mode = button.dataset.mode;
+        render();
+      });
+
+      els.detailBoreSelect.addEventListener("change", () => {
+        updateChannel(state.selectedId, "bore", els.detailBoreSelect.value);
+        render();
+      });
+
+      els.detailWallInput.addEventListener("input", () => {
+        if (isRendering) return;
+        updateChannel(state.selectedId, "wall", els.detailWallInput.value);
+        render();
+      });
+
+      els.detailRpmInput.addEventListener("input", () => {
+        if (isRendering) return;
+        updateChannel(state.selectedId, "rpm", els.detailRpmInput.value);
+        render();
+      });
+
+      els.detailTargetFlowInput.addEventListener("input", () => {
+        if (isRendering) return;
+        const selected = getSelectedChannel();
+        const basis = getBasis(selected.pumphead, selected.bore);
+        if (basis.available && basis.mlRev > 0) {
+          selected.rpm = Math.max(0, toNumber(els.detailTargetFlowInput.value, 0) / basis.mlRev);
+        }
+        render();
+      });
+
+      els.detailMeasuredInput.addEventListener("input", () => {
+        if (isRendering) return;
+        updateChannel(state.selectedId, "measured", els.detailMeasuredInput.value);
+        state.measurementId = state.selectedId;
+        render();
+      });
+
+      els.scenarioCards.addEventListener("input", (event) => {
+        const toggleId = event.target.dataset.factorToggle;
+        const biasId = event.target.dataset.factorBias;
+        const uncertaintyId = event.target.dataset.factorUncertainty;
+        const id = toggleId || biasId || uncertaintyId;
+        if (!id) return;
+        const factor = state.factors.find((item) => item.id === id);
+        if (!factor) return;
+        if (toggleId) factor.active = event.target.checked;
+        if (biasId) factor.bias = toNumber(event.target.value, 0);
+        if (uncertaintyId) factor.uncertainty = Math.max(0, toNumber(event.target.value, 0));
+        render();
+      });
+
+      els.scenarioTargetSelect.addEventListener("change", () => {
+        state.scenarioTarget = els.scenarioTargetSelect.value;
+        render();
+      });
+
+      els.measurementChannelSelect.addEventListener("change", () => {
+        state.measurementId = els.measurementChannelSelect.value;
+        state.selectedId = state.measurementId;
+        render();
+      });
+
+      els.measurementFlowInput.addEventListener("input", () => {
+        if (isRendering) return;
+        updateChannel(state.measurementId, "measured", els.measurementFlowInput.value);
+        render();
+      });
+    }
+
+    function handleChannelFieldChange(event) {
+      const field = event.target.dataset.channelField;
+      const id = event.target.dataset.channelId;
+      if (!field || !id || isRendering) return;
+      state.selectedId = id;
+      if (field === "enabled") updateChannel(id, field, event.target.checked);
+      else updateChannel(id, field, event.target.value);
+      render();
+    }
+
+    function init() {
+      renderStatic();
+      bindEvents();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
